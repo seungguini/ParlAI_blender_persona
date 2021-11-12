@@ -116,7 +116,7 @@ class InteractiveWorld(DialogPartnerWorld):
 
             if multi_check == True:
 
-                for index, utterance in enumerate(raw_text.split('</s>')):
+                for index, turn_each in enumerate(raw_text.split('</s>')):
 
                 # if turn_n == 2:
                 #     turn1 = raw_text.split('</s>')[0]
