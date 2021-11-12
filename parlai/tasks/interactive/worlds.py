@@ -115,56 +115,62 @@ class InteractiveWorld(DialogPartnerWorld):
             raw_text = raw_text.replace('\n', '')
 
             if multi_check == True:
-                if turn_n == 2:
-                    turn1 = raw_text.split('</s>')[0]
-                    turn2 = raw_text.split('</s>')[1]
-                    turn_temp = [turn1, turn2]
 
-                    for index, turn_each in enumerate(turn_temp):
-                        if index == 1:
-                            # second turn
-                            # acts[0] = {'id': 'localHuman', 'episode_done': False, 'label_candidates': None,
-                            #            'text': str(turn_each)}
-                            if self.turn_cnt == 0:
-                                self.p1, self.p2 = self.get_contexts()
+                for index, utterance in enumerate(raw_text.split('</s>')):
 
-                            acts = self.acts
-                            agents = self.agents
-                            if self.turn_cnt == 0 and self.p1 != '':
-                                # add the context on to the first message to agent 0
-                                context_act = Message(
-                                    {'id': 'context', 'text': self.p1, 'episode_done': False}
-                                )
-                                agents[0].observe(validate(context_act))
-                            try:
-                                # act = deepcopy(agents[0].act())
-                                act = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
-                                           'text': str(turn_each)}
-                            except StopIteration:
-                                self.reset()
-                                self.finalize_episode()
-                                self.turn_cnt = 0
-                                return
+                # if turn_n == 2:
+                #     turn1 = raw_text.split('</s>')[0]
+                #     turn2 = raw_text.split('</s>')[1]
+                #     turn_temp = [turn1, turn2]
 
-                            acts[0] = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
-                                       'text': str(turn_each)}
+                #     for index, turn_each in enumerate(turn_temp):
+                    # if index == 1:
+                        # second turn
+                        # acts[0] = {'id': 'localHuman', 'episode_done': False, 'label_candidates': None,
+                        #            'text': str(turn_each)}
 
-                            if self.turn_cnt == 0 and self.p2 != '':
-                                # add the context on to the first message to agent 1
-                                context_act = Message(
-                                    {'id': 'context', 'text': self.p2, 'episode_done': False}
-                                )
-                                agents[1].observe(validate(context_act))
+                    # Seunggun - if FINAL turn, WRITE response to script (line 170). ELSE, don't write (line)
+                    if index == len(raw_text) -1:
+                        if self.turn_cnt == 0:
+                            self.p1, self.p2 = self.get_contexts()
 
-                            agents[1].observe(validate(acts[0]))
-                            acts[1] = agents[1].act()
-                            agents[0].observe(validate(acts[1]))
+                        acts = self.acts
+                        agents = self.agents
+                        if self.turn_cnt == 0 and self.p1 != '':
+                            # add the context on to the first message to agent 0
+                            context_act = Message(
+                                {'id': 'context', 'text': self.p1, 'episode_done': False}
+                            )
+                            agents[0].observe(validate(context_act))
+                        try:
+                            # act = deepcopy(agents[0].act())
+                            act = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
+                                        'text': str(turn_each)}
+                        except StopIteration:
+                            self.reset()
+                            self.finalize_episode()
+                            self.turn_cnt = 0
+                            return
 
-                            result = acts[1]['text']
-                            script_response.write("%s\n" % (result))
-                            self.update_counters()
-                            self.turn_cnt += 1
+                        acts[0] = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
+                                    'text': str(turn_each)}
 
+                        if self.turn_cnt == 0 and self.p2 != '':
+                            # add the context on to the first message to agent 1
+                            context_act = Message(
+                                {'id': 'context', 'text': self.p2, 'episode_done': False}
+                            )
+                            agents[1].observe(validate(context_act))
+
+                        agents[1].observe(validate(acts[0]))
+                        acts[1] = agents[1].act()
+                        agents[0].observe(validate(acts[1]))
+
+                        result = acts[1]['text']
+                        script_response.write("%s\n" % (result))
+                        self.update_counters()
+                        self.turn_cnt += 1
+                    else:
                         # first turn
                         # acts[0] = {'id': 'localHuman', 'episode_done': True, 'label_candidates': None,
                         #            'text': str(turn_each)}
@@ -183,7 +189,7 @@ class InteractiveWorld(DialogPartnerWorld):
                         try:
                             # act = deepcopy(agents[0].act())
                             act = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': True,
-                                       'text': str(turn_each)}
+                                        'text': str(turn_each)}
                         except StopIteration:
                             self.reset()
                             self.finalize_episode()
@@ -191,7 +197,7 @@ class InteractiveWorld(DialogPartnerWorld):
                             return
 
                         acts[0] = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': True,
-                                   'text': str(turn_each)}
+                                    'text': str(turn_each)}
 
                         if self.turn_cnt == 0 and self.p2 != '':
                             # add the context on to the first message to agent 1
@@ -212,164 +218,6 @@ class InteractiveWorld(DialogPartnerWorld):
                         if act['episode_done']:
                             self.finalize_episode()
                             self.turn_cnt = 0
-
-
-                    turn_temp = []
-
-                elif turn_n == 3:
-                    turn1 = raw_text.split('</s>')[0]
-                    # turn2 = raw_text.split('</s>')[1]
-                    turn2 = raw_text.split('</s>')[1].split('<\s>')[0]
-                    turn3 = raw_text.split('<\s>')[1]
-
-                    # if turn2.find('</s>') != -1:
-                    #     turn3 = raw_text.split('</s>')[2]
-                    # elif raw_text.find('<\s>') != -1:
-                    #     turn3 = raw_text.split('<\s>')[1]
-                    # else:
-                    #     turn3 = ''
-                    #     print("Check the turn3!!")
-                    turn_temp = [turn1, turn2, turn3]
-
-                    for index, turn_each in enumerate(turn_temp):
-                        if index == 1:
-                            # second turn
-                            # acts[0] = {'id': 'localHuman', 'episode_done': False, 'label_candidates': None,
-                            #            'text': str(turn_each)}
-                            if self.turn_cnt == 0:
-                                self.p1, self.p2 = self.get_contexts()
-
-                            acts = self.acts
-                            agents = self.agents
-                            if self.turn_cnt == 0 and self.p1 != '':
-                                # add the context on to the first message to agent 0
-                                context_act = Message(
-                                    {'id': 'context', 'text': self.p1, 'episode_done': False}
-                                )
-                                agents[0].observe(validate(context_act))
-
-                            try:
-                                # act = deepcopy(agents[0].act())
-                                act = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
-                                           'text': str(turn_each)}
-                            except StopIteration:
-                                self.reset()
-                                self.finalize_episode()
-                                self.turn_cnt = 0
-                                return
-
-                            acts[0] = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
-                                       'text': str(turn_each)}
-
-                            if self.turn_cnt == 0 and self.p2 != '':
-                                # add the context on to the first message to agent 1
-                                context_act = Message(
-                                    {'id': 'context', 'text': self.p2, 'episode_done': False}
-                                )
-                                agents[1].observe(validate(context_act))
-
-                            agents[1].observe(validate(acts[0]))
-                            acts[1] = agents[1].act()
-                            agents[0].observe(validate(acts[1]))
-
-                            result = acts[1]['text']
-                            # script_response.write("%s\n" % (result))
-                            self.update_counters()
-                            self.turn_cnt += 1
-
-                        if index == 2:
-                            # third turn
-                            # acts[0] = {'id': 'localHuman', 'episode_done': False, 'label_candidates': None,
-                            #            'text': str(turn_each)}
-                            if self.turn_cnt == 0:
-                                self.p1, self.p2 = self.get_contexts()
-
-                            acts = self.acts
-                            agents = self.agents
-                            if self.turn_cnt == 0 and self.p1 != '':
-                                # add the context on to the first message to agent 0
-                                context_act = Message(
-                                    {'id': 'context', 'text': self.p1, 'episode_done': False}
-                                )
-                                agents[0].observe(validate(context_act))
-
-                            try:
-                                # act = deepcopy(agents[0].act())
-                                act = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
-                                           'text': str(turn_each)}
-                            except StopIteration:
-                                self.reset()
-                                self.finalize_episode()
-                                self.turn_cnt = 0
-                                return
-                            acts[0] = {'id': 'safeLocalHuman', 'label_candidates': None, 'episode_done': False,
-                                       'text': str(turn_each)}
-
-                            if self.turn_cnt == 0 and self.p2 != '':
-                                # add the context on to the first message to agent 1
-                                context_act = Message(
-                                    {'id': 'context', 'text': self.p2, 'episode_done': False}
-                                )
-                                agents[1].observe(validate(context_act))
-
-                            agents[1].observe(validate(acts[0]))
-                            acts[1] = agents[1].act()
-                            agents[0].observe(validate(acts[1]))
-
-                            result = acts[1]['text']
-                            script_response.write("%s\n" % (result))
-                            self.update_counters()
-                            self.turn_cnt += 1
-
-
-
-                        # first turn
-                        if self.turn_cnt == 0:
-                            self.p1, self.p2 = self.get_contexts()
-
-                        acts = self.acts
-                        agents = self.agents
-                        if self.turn_cnt == 0 and self.p1 != '':
-                            # add the context on to the first message to agent 0
-                            context_act = Message(
-                                {'id': 'context', 'text': self.p1, 'episode_done': False}
-                            )
-                            agents[0].observe(validate(context_act))
-
-                        try:
-                            # act = deepcopy(agents[0].act())
-                            act = {'id': 'safeLocalHuman', 'episode_done': True, 'label_candidates': None,
-                                       'text': str(turn_each)}
-                        except StopIteration:
-                            self.reset()
-                            self.finalize_episode()
-                            self.turn_cnt = 0
-                            return
-                        acts[0] = {'id': 'safeLocalHuman', 'episode_done': True, 'label_candidates': None,
-                                   'text': str(turn_each)}
-                        if self.turn_cnt == 0 and self.p2 != '':
-                            # add the context on to the first message to agent 1
-                            context_act = Message(
-                                {'id': 'context', 'text': self.p2, 'episode_done': False}
-                            )
-                            agents[1].observe(validate(context_act))
-
-                        agents[1].observe(validate(acts[0]))
-                        acts[1] = agents[1].act()
-                        agents[0].observe(validate(acts[1]))
-
-                        # result = acts[1]['text']
-                        # script_response.write("%s\n" % (result))
-                        self.update_counters()
-                        self.turn_cnt += 1
-
-                        if act['episode_done']:
-                            self.finalize_episode()
-                            self.turn_cnt = 0
-
-
-
-                    turn_temp = []
 
             else:
                 # acts[0] = {'id': 'localHuman', 'episode_done': True, 'label_candidates': None, 'text': str(raw_text)}
